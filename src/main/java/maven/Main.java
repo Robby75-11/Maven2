@@ -1,4 +1,8 @@
 package maven;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,7 +66,8 @@ public class Main {
                 .toList();
         System.out.println("Esercizio #4: " + prodottiClientiTier2);
 
-       //Esercizio 1
+
+       //Esercizio 1 (15/05/2025)
         Map<Customer, List<Order>> ordiniPerCliente = orders.stream()
                 .collect(Collectors.groupingBy(Order::getCustomer));
 
@@ -119,9 +124,45 @@ public class Main {
 
         // # Extra Esercizio 6
 
-        // Utilizzo di ProductFileManager per salvare la lista dei prodotti di ieri CON GESTIONE DELLE ECCEZIONI
-        ProductFileManager productFileManager = new ProductFileManager("catalogo_prodotti.txt");
-        productFileManager.salvaProdottiSuDisco(products); // Passiamo la lista 'products' creata ieri
+        try {
+            salvaProdottiSuDisco(products);
+            leggiProdottiDaDisco().forEach(product -> System.out.println(product));
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+
+
+    }
+
+    public static void salvaProdottiSuDisco(List<Product> prodotti) throws IOException {
+        String prodottiStringati = "";
+        //con questo stream sui prodotti mappo ogni prodotto con una stringa ottenuta dai campi del prodotto
+        //e poi applico allo stream di stringhe così ottenuto, una joining per unire tutte le stringhe concatenandole con #
+        prodottiStringati=prodotti.stream().map(product -> {String prodottoStringato =
+                product.getName()+"@"+product.getCategory()+"@"+product.getPrice();
+            return prodottoStringato;}).collect(Collectors.joining("#"));
+
+        File file = new File("oggettiStringati.txt");
+
+        FileUtils.writeStringToFile(file,prodottiStringati,"UTF-8", false);
+    }
+
+    public static List<Product> leggiProdottiDaDisco() throws IOException{
+        File file = new File("oggettiStringati.txt");
+
+        String prodottiStringati = FileUtils.readFileToString(file, "UTF-8");
+
+        //con questo metodo split, divido la stringa unica ottenuta, ottenendo un array di stringhe che contiene
+        //le stringhe le rappresentano un singolo prodotto
+        String[] arrayProdottiStringati = prodottiStringati.split("#");
+
+        //qui ho usato uno stream sull'array precedente. Ho usato map per associare ad ogni stringa presente nell'array
+        //un oggetto di tipo Product ottenuto splittando di nuovo la stringa per @ e usando i valori presenti in questo
+        // nuovo array come valori per creare un nuovo prodotto. Il toList finale crea una lista di prodotti
+        return Arrays.stream(arrayProdottiStringati).map(s -> {String[] prodottoStringato = s.split("@");
+            Product p = new Product(new Random().nextLong(1,101),prodottoStringato[0],prodottoStringato[1],Double.parseDouble(prodottoStringato[2]));
+            return p;}).toList();
+
 
     }
 
